@@ -1,0 +1,5 @@
+{
+  "name": "Xiaohongshu Tech Post Generator",
+  "description": "Generate Xiaohongshu style tech posts and card images using Gemini Search Grounding.",
+  "requestFramePermissions": []
+}
