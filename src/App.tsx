@@ -73,11 +73,10 @@ export default function App() {
     }
   };
 
-  const handleCopyText = () => {
-    if (!postData) return;
-    const text = `${postData.postTitle}\n\n${postData.postContent}`;
+  const handleCopy = (text: string, label: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    alert(`${label} copied to clipboard!`);
   };
 
   return (
@@ -129,19 +128,42 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Text Content */}
             <div className="lg:col-span-4 space-y-6">
+              {/* Title Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Post Title</h3>
+                  <button
+                    onClick={() => handleCopy(postData.postTitle, 'Title')}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Copy Title"
+                  >
+                    <Copy className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="text-xl font-bold text-gray-900">
+                  {postData.postTitle}
+                </div>
+                <div className="mt-3 text-sm text-gray-500 flex items-center gap-2">
+                  <span className={`font-medium ${Array.from(postData.postTitle).length > 20 ? 'text-red-500' : 'text-green-600'}`}>
+                    {Array.from(postData.postTitle).length}/20 chars
+                  </span>
+                  <span>(XHS limit)</span>
+                </div>
+              </div>
+
+              {/* Content Section */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Post Content</h3>
                   <button
-                    onClick={handleCopyText}
+                    onClick={() => handleCopy(postData.postContent, 'Content')}
                     className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Copy to clipboard"
+                    title="Copy Content"
                   >
                     <Copy className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="prose prose-sm max-w-none">
-                  <h4 className="text-xl font-bold text-gray-900 mb-4">{postData.postTitle}</h4>
                   <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                     {postData.postContent}
                   </div>
