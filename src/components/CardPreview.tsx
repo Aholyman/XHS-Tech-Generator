@@ -28,8 +28,16 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ card, index, total, id
       {/* Body */}
       <div className="flex-1 p-16 flex flex-col gap-10 overflow-hidden">
         {card.layout === 'image_top' && card.imageUrl && (
-          <div className="w-full h-[420px] rounded-3xl overflow-hidden shadow-lg border border-gray-100 shrink-0">
-            <img src={card.imageUrl} alt="Illustration" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <div className="w-full h-[420px] rounded-3xl overflow-hidden shadow-lg border border-gray-100 shrink-0 bg-gray-200">
+            <img 
+              src={card.imageUrl} 
+              alt="Illustration" 
+              className="w-full h-full object-cover" 
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.src = `https://picsum.photos/seed/${encodeURIComponent(card.title)}/800/600`;
+              }}
+            />
           </div>
         )}
 
@@ -43,8 +51,16 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ card, index, total, id
         />
 
         {card.layout === 'image_bottom' && card.imageUrl && (
-          <div className="w-full h-[420px] rounded-3xl overflow-hidden shadow-lg border border-gray-100 mt-auto shrink-0">
-            <img src={card.imageUrl} alt="Illustration" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <div className="w-full h-[420px] rounded-3xl overflow-hidden shadow-lg border border-gray-100 mt-auto shrink-0 bg-gray-200">
+            <img 
+              src={card.imageUrl} 
+              alt="Illustration" 
+              className="w-full h-full object-cover" 
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.src = `https://picsum.photos/seed/${encodeURIComponent(card.title)}/800/600`;
+              }}
+            />
           </div>
         )}
       </div>
