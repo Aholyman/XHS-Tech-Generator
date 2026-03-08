@@ -4,16 +4,26 @@
  */
 
 import React, { useState } from 'react';
-import { generatePostData, generateCardImage, PostData, CardData } from './services/gemini';
+import { generatePostData, generateCardImage, PostData, CardData, ApiConfig } from './services/gemini';
 import { CardPreview } from './components/CardPreview';
 import { toPng } from 'html-to-image';
-import { Loader2, Download, Copy, Sparkles, Search, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Download, Copy, Sparkles, Search, Link as LinkIcon, Settings, X } from 'lucide-react';
 
 export default function App() {
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
   const [postData, setPostData] = useState<PostData | null>(null);
   const [error, setError] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiConfig, setApiConfig] = useState<ApiConfig>(() => {
+    const saved = localStorage.getItem('apiConfig');
+    return saved ? JSON.parse(saved) : { provider: 'gemini', openaiBaseUrl: 'https://api.openai.com/v1', openaiModel: 'gpt-4o', openaiKey: '', aliyunKey: '', aliyunModel: 'qwen-max', openclawKey: '', openclawModel: 'openclaw' };
+  });
+
+  const saveConfig = (newConfig: ApiConfig) => {
+    setApiConfig(newConfig);
+    localStorage.setItem('apiConfig', JSON.stringify(newConfig));
+  };
 
   const handleGenerate = async () => {
     if (!topic) return;
@@ -22,7 +32,7 @@ export default function App() {
     setPostData(null);
 
     try {
-      const data = await generatePostData(topic);
+      const data = await generatePostData(topic, apiConfig);
       setPostData(data);
 
       // Generate images for cards that need them
@@ -90,10 +100,148 @@ export default function App() {
             </div>
             <h1 className="text-xl font-bold text-gray-900">XHS Tech Generator</h1>
           </div>
+          <button 
+            onClick={() => setShowSettings(true)} 
+            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+            title="API Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Settings Modal */}
+        {showSettings && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900">API Settings</h2>
+                <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">AI Provider</label>
+                  <select
+                    value={apiConfig.provider}
+                    onChange={(e) => saveConfig({ ...apiConfig, provider: e.target.value as 'gemini' | 'openai' | 'aliyun' | 'openclaw' })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  >
+                    <option value="gemini">Google Gemini (Built-in, Free)</option>
+                    <option value="aliyun">阿里云百炼 (Qwen / 通义千问)</option>
+                    <option value="openclaw">阿里云百炼 (OpenClaw)</option>
+                    <option value="openai">Custom API (OpenAI Compatible)</option>
+                  </select>
+                </div>
+
+                {apiConfig.provider === 'openclaw' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model Name (模型名称)</label>
+                      <input
+                        type="text"
+                        value={apiConfig.openclawModel || 'openclaw'}
+                        onChange={(e) => saveConfig({ ...apiConfig, openclawModel: e.target.value })}
+                        placeholder="openclaw"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={apiConfig.openclawKey || ''}
+                        onChange={(e) => saveConfig({ ...apiConfig, openclawKey: e.target.value })}
+                        placeholder="sk-..."
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      已自动配置阿里云百炼接口地址 (dashscope.aliyuncs.com)。请确保你填写的模型名称与你在百炼控制台部署的 OpenClaw 模型名称一致。
+                    </p>
+                  </>
+                )}
+
+                {apiConfig.provider === 'aliyun' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model Name (模型名称)</label>
+                      <input
+                        type="text"
+                        value={apiConfig.aliyunModel || 'qwen-max'}
+                        onChange={(e) => saveConfig({ ...apiConfig, aliyunModel: e.target.value })}
+                        placeholder="qwen-max, qwen-coder-plus..."
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={apiConfig.aliyunKey || ''}
+                        onChange={(e) => saveConfig({ ...apiConfig, aliyunKey: e.target.value })}
+                        placeholder="sk-..."
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      已自动配置阿里云百炼接口地址 (dashscope.aliyuncs.com)。支持 qwen-max, qwen-plus, qwen-coder-plus 等模型。
+                    </p>
+                  </>
+                )}
+                
+                {apiConfig.provider === 'openai' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                      <input
+                        type="text"
+                        value={apiConfig.openaiBaseUrl}
+                        onChange={(e) => saveConfig({ ...apiConfig, openaiBaseUrl: e.target.value })}
+                        placeholder="https://api.openai.com/v1"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Model Name</label>
+                      <input
+                        type="text"
+                        value={apiConfig.openaiModel}
+                        onChange={(e) => saveConfig({ ...apiConfig, openaiModel: e.target.value })}
+                        placeholder="gpt-4o"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={apiConfig.openaiKey}
+                        onChange={(e) => saveConfig({ ...apiConfig, openaiKey: e.target.value })}
+                        placeholder="sk-..."
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Note: Custom APIs do not support the built-in Google Search grounding. The AI will rely on its internal knowledge. Image generation will still use the built-in Gemini model.
+                    </p>
+                  </>
+                )}
+              </div>
+              <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Input Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">What's the topic today?</h2>
